@@ -17,6 +17,7 @@ $rid = switch ($Platform) {
     default { "win-x64" }
 }
 $outputDir = Join-Path $PSScriptRoot "bin\$Platform\$Configuration\$targetFramework\$rid"
+$registrationDir = Join-Path $PSScriptRoot "bin\$Configuration\$targetFramework\$rid"
 $showLocalDetailsFlagPath = Join-Path $outputDir "show-local-details.flag"
 
 Get-Process HermesDesktop -ErrorAction SilentlyContinue | Stop-Process -Force
@@ -42,7 +43,13 @@ if ($ShowLocalDetails) {
     Remove-Item -LiteralPath $showLocalDetailsFlagPath -Force
 }
 
-$manifestPath = Join-Path $outputDir "AppxManifest.xml"
+# WinUI/MSIX registration reads from the non-platform bin path. Keep it synced
+# with the fresh platform-specific build output so the registered app matches
+# the latest compiled XAML and binaries.
+New-Item -ItemType Directory -Force -Path $registrationDir | Out-Null
+Copy-Item -Path (Join-Path $outputDir '*') -Destination $registrationDir -Recurse -Force
+
+$manifestPath = Join-Path $registrationDir "AppxManifest.xml"
 Add-AppxPackage -Register $manifestPath -ForceApplicationShutdown
 
 $package = Get-AppxPackage | Where-Object { $_.Name -eq "EDC29F63-281C-4D34-8723-155C8122DEA2" } | Select-Object -First 1
