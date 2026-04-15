@@ -19,6 +19,7 @@ public sealed partial class SettingsPage : Page
 {
     private static readonly ResourceLoader ResourceLoader = new();
     private readonly RuntimeStatusService _runtimeStatusService = App.Services.GetRequiredService<RuntimeStatusService>();
+    private HermesUpdateInfo? _latestUpdateInfo;
 
     public SettingsPage()
     {
@@ -202,6 +203,10 @@ This file is a living document about the human I work with. It helps me provide 
         AuthTokenCommandBox.Text = HermesEnvironment.ModelAuthTokenCommand ?? "";
         SelectComboByTag(AuthModeCombo, HermesEnvironment.ModelAuthMode, fallbackIndex: 0);
         UpdateAuthFieldState(HermesEnvironment.ModelAuthMode);
+        CurrentVersionText.Text = HermesUpdateService.CurrentVersion;
+        UpdateStatusText.Text = "Not checked yet.";
+        LatestReleaseText.Text = "Latest release: not checked";
+        UpdateHermesButton.IsEnabled = false;
 
         PopulateModelCombo(normalizedProvider);
         SelectCurrentModel(HermesEnvironment.DefaultModel);
@@ -796,6 +801,45 @@ This file is a living document about the human I work with. It helps me provide 
         }
         if (combo.Items.Count > 0)
             combo.SelectedIndex = 0;
+    }
+
+    private async void CheckForUpdates_Click(object sender, RoutedEventArgs e)
+    {
+        CheckUpdatesButton.IsEnabled = false;
+        UpdateHermesButton.IsEnabled = false;
+        UpdateStatusText.Text = "Checking for updates...";
+        LatestReleaseText.Text = "Latest release: checking...";
+
+        try
+        {
+            _latestUpdateInfo = await HermesUpdateService.CheckForUpdatesAsync();
+            CurrentVersionText.Text = _latestUpdateInfo.CurrentVersion;
+            UpdateStatusText.Text = _latestUpdateInfo.Status;
+            LatestReleaseText.Text = $"Latest release: {_latestUpdateInfo.LatestVersion}";
+            UpdateHermesButton.IsEnabled = _latestUpdateInfo.UpdateAvailable;
+        }
+        catch (Exception ex)
+        {
+            _latestUpdateInfo = null;
+            UpdateStatusText.Text = $"Update check failed: {ex.Message}";
+            LatestReleaseText.Text = "Latest release: unavailable";
+        }
+        finally
+        {
+            CheckUpdatesButton.IsEnabled = true;
+        }
+    }
+
+    private void UpdateHermes_Click(object sender, RoutedEventArgs e)
+    {
+        if (_latestUpdateInfo is null)
+        {
+            UpdateStatusText.Text = "Check for updates first.";
+            return;
+        }
+
+        HermesUpdateService.OpenUpdate(_latestUpdateInfo);
+        UpdateStatusText.Text = $"Opening {_latestUpdateInfo.LatestVersion} download...";
     }
 
     private static void SelectComboByTag(ComboBox combo, string? tag, int fallbackIndex)

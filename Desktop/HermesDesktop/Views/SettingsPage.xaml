@@ -373,6 +373,44 @@
                             </StackPanel>
                         </StackPanel>
 
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="Hermes version" Style="{StaticResource LabelTextStyle}"/>
+                            <TextBlock x:Name="CurrentVersionText"
+                                       Text="Loading..."
+                                       Foreground="{StaticResource AppTextSecondaryBrush}"
+                                       FontSize="13"/>
+                        </StackPanel>
+
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="Update status" Style="{StaticResource LabelTextStyle}"/>
+                            <TextBlock x:Name="UpdateStatusText"
+                                       Text="Not checked yet."
+                                       TextWrapping="Wrap"
+                                       Foreground="{StaticResource AppTextSecondaryBrush}"
+                                       FontSize="13"/>
+                            <TextBlock x:Name="LatestReleaseText"
+                                       Text="Latest release: not checked"
+                                       Foreground="{StaticResource AppTextSecondaryBrush}"
+                                       FontSize="12"
+                                       TextWrapping="Wrap"/>
+                        </StackPanel>
+
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <Button x:Name="CheckUpdatesButton"
+                                    Content="Check for updates"
+                                    Click="CheckForUpdates_Click"
+                                    Background="{StaticResource AppInsetBrush}"
+                                    BorderBrush="{StaticResource AppStrokeBrush}"
+                                    Foreground="White"/>
+                            <Button x:Name="UpdateHermesButton"
+                                    Content="Update Hermes"
+                                    Click="UpdateHermes_Click"
+                                    Background="{StaticResource AppAccentGradientBrush}"
+                                    BorderBrush="{StaticResource AppAccentDarkBrush}"
+                                    Foreground="#16110D"
+                                    IsEnabled="False"/>
+                        </StackPanel>
+
                         <Border Height="1" Background="{StaticResource AppStrokeBrush}" Margin="0,4"/>
 
                         <!-- Telegram -->
