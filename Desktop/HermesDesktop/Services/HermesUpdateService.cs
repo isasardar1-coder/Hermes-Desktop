@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Net.Http;
+using System.Reflection;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -96,16 +97,47 @@ internal static class HermesUpdateService
         try
         {
             var version = Package.Current.Id.Version;
-            return $"{version.Major}.{version.Minor}.{version.Build}.{version.Revision}";
+            return FormatDisplayVersion(version.Major, version.Minor, version.Build, version.Revision);
         }
         catch
         {
+            var informationalVersion = typeof(HermesUpdateService).Assembly
+                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
+                .InformationalVersion;
+            if (!string.IsNullOrWhiteSpace(informationalVersion))
+                return NormalizeDisplayVersion(informationalVersion);
+
             var assemblyVersion = typeof(HermesUpdateService).Assembly.GetName().Version;
             if (assemblyVersion is not null)
-                return assemblyVersion.ToString();
+                return FormatDisplayVersion(
+                    assemblyVersion.Major,
+                    assemblyVersion.Minor,
+                    assemblyVersion.Build,
+                    assemblyVersion.Revision);
 
             return "unknown";
         }
+    }
+
+    private static string FormatDisplayVersion(int major, int minor, int build, int revision)
+    {
+        var parts = new List<int> { major, minor };
+        if (build >= 0)
+            parts.Add(build);
+        if (revision > 0)
+            parts.Add(revision);
+
+        return string.Join(".", parts);
+    }
+
+    private static string NormalizeDisplayVersion(string version)
+    {
+        var normalized = version.Trim().TrimStart('v', 'V');
+        var plusIndex = normalized.IndexOf('+');
+        if (plusIndex >= 0)
+            normalized = normalized[..plusIndex];
+
+        return normalized;
     }
 
     private static int CompareVersions(string currentVersion, string latestVersion)
